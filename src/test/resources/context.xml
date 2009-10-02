@@ -26,11 +26,7 @@
 				<prop key="hibernate.show_sql">false</prop>
 			</props>
 		</property>
-		<property name="annotatedClasses">
-			<list>
-				<value>DomainClass</value>
-			</list>
-		</property>
+		<property name="packagesToScan" value="domain"/>
 	</bean>
 
 	<bean name="transactionManager"
