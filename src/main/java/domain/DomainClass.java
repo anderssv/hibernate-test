@@ -2,9 +2,11 @@ package domain;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 
 @Entity
+@Table(name="DOMAIN_CLASS")
 public class DomainClass {
 
 	private Long id;
