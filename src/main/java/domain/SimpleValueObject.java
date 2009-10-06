@@ -13,15 +13,15 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 public class SimpleValueObject {
 
 	private String key;
-	private String value;
+	private String content;
 
 	// Hibernate
 	protected SimpleValueObject() {
 	}
 
-	public SimpleValueObject(String string, String string2) {
+	public SimpleValueObject(String string, String content) {
 		this.key = string;
-		this.value = string2;
+		this.content = content;
 	}
 
 	@Id
@@ -34,15 +34,15 @@ public class SimpleValueObject {
 	private void setKey(String key) {
 		this.key = key;
 	}
-	
-	public String getValue() {
-		return this.value;
+
+	public String getContent() {
+		return this.content;
 	}
-	
+
 	// Hibernate
 	@SuppressWarnings("unused")
-	private void setValue(String value) {
-		this.value = value;
+	private void setContent(String value) {
+		this.content = value;
 	}
 
 }

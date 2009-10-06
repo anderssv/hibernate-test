@@ -80,14 +80,13 @@ public class HibernateTest {
 		assertEquals(0, cacheStats.getElementCountInMemory());
 
 		DomainClass domain = (DomainClass) session.get(DomainClass.class, 2L);
-		assertNotNull(domain.getValue());
-		assertNotNull(domain.getValue().getValue());
+		assertNotNull(domain.getValue().getContent());
 		assertEquals(0, cacheStats.getHitCount());
 		assertEquals(1, cacheStats.getMissCount());
 
 		session.clear();
 		domain = (DomainClass) session.get(DomainClass.class, 2L);
-		assertNotNull(domain.getValue().getValue());
+		assertNotNull(domain.getValue().getContent());
 		assertEquals(1, cacheStats.getHitCount());
 	}
 
