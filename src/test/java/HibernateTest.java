@@ -23,10 +23,13 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.StatementCallback;
+import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.jdbc.SimpleJdbcTestUtils;
 import org.springframework.transaction.annotation.Transactional;
 
+import domain.Child;
 import domain.DomainClass;
 import domain.SimpleValueObject;
 
@@ -88,6 +91,17 @@ public class HibernateTest {
 		domain = (DomainClass) session.get(DomainClass.class, 2L);
 		assertNotNull(domain.getValue().getContent());
 		assertEquals(1, cacheStats.getHitCount());
+	}
+
+	@Test
+	public void shouldInsertParentChildRelationshipInTheCorrectOrder() {
+		Session session = sessionFactory.getCurrentSession();
+		DomainClass domain = getDefaultData(3L, "NOK");
+
+		domain.addChild(new Child("1", "Child1"));
+
+		session.persist(domain);
+		flushAndClearCaches(session);
 	}
 
 	private void flushAndClearCaches(Session session) {
@@ -164,7 +178,7 @@ public class HibernateTest {
 	}
 
 	private void deleteAll(JdbcTemplate template) {
-		template.execute("DELETE FROM DOMAIN_TABLE");
-		template.execute("DELETE FROM VALUE_TABLE");
+		SimpleJdbcTestUtils.deleteFromTables(new SimpleJdbcTemplate(template),
+				"DOMAIN_TABLE", "VALUE_TABLE", "CHILD_TABLE");
 	}
 }

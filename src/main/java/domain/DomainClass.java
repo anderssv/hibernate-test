@@ -1,10 +1,14 @@
 package domain;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 @Entity
@@ -14,6 +18,8 @@ public class DomainClass {
 	private Long id;
 	private String name;
 	private SimpleValueObject value;
+
+	private Set<Child> children = new HashSet<Child>();
 
 	// Hibernate
 	@SuppressWarnings("unused")
@@ -44,15 +50,28 @@ public class DomainClass {
 		this.name = name;
 	}
 
-	@ManyToOne(fetch=FetchType.LAZY, cascade = CascadeType.ALL)
+	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	public SimpleValueObject getValue() {
 		return this.value;
+	}
+
+	public void setChildren(Set<Child> children) {
+		this.children = children;
+	}
+
+	@OneToMany(cascade = CascadeType.ALL)
+	public Set<Child> getChildren() {
+		return children;
 	}
 
 	// Hibernate
 	@SuppressWarnings("unused")
 	private void setValue(SimpleValueObject values) {
 		this.value = values;
+	}
+
+	public void addChild(Child child) {
+		children.add(child);
 	}
 
 }
