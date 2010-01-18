@@ -29,9 +29,10 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.jdbc.SimpleJdbcTestUtils;
 import org.springframework.transaction.annotation.Transactional;
 
+import db.Tables;
 import domain.Child;
 import domain.DomainClass;
-import domain.SimpleValueObject;
+import domain.Currency;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:context.xml" })
@@ -45,9 +46,24 @@ public class HibernateTest {
 	private DataSource dataSource;
 
 	@Test
+	public void shouldAllowUnpersistedValueObjectWhenAlreadyPresentInDatabase() {
+		Session session = sessionFactory.getCurrentSession();
+		String currencyKey = "NOK";
+		persistCurrency(session, currencyKey);
+		flushAndClearCaches(session);
+
+		session.persist(getDefaultData(1L, currencyKey));
+		session.flush();
+	}
+
+	private void persistCurrency(Session session, String currencyKey) {
+		session.persist(new Currency(currencyKey, "Description"));
+	}
+
+	@Test
 	public void shouldNotQueryFirsLevelCacheOnCriteria() {
 		Session session = sessionFactory.getCurrentSession();
-		session.persist(getDefaultData(1L, "NOK"));
+		persistDefaultData(session, 1L, "NOK");
 
 		// Remove everything
 		flushAndClearCaches(session);
@@ -69,33 +85,40 @@ public class HibernateTest {
 		assertEquals(null, searchWithCriteria(session));
 	}
 
+	private void persistDefaultData(Session session, long domainId,
+			String currencyKey) {
+		persistCurrency(session, currencyKey);
+		session.persist(getDefaultData(domainId, currencyKey));
+	}
+
 	@Test
 	public void shouldHitSecondLevelCache() {
 		Session session = sessionFactory.getCurrentSession();
-		session.persist(getDefaultData(2L, "SEK"));
+		persistDefaultData(session, 2L, "SEK");
 
 		flushAndClearCaches(session);
 
 		SecondLevelCacheStatistics cacheStats = sessionFactory.getStatistics()
 				.getSecondLevelCacheStatistics(
-						SimpleValueObject.class.getCanonicalName());
+						Currency.class.getCanonicalName());
 
 		assertEquals(0, cacheStats.getElementCountInMemory());
 
 		DomainClass domain = (DomainClass) session.get(DomainClass.class, 2L);
-		assertNotNull(domain.getValue().getContent());
+		assertNotNull(domain.getCurrency().getContent());
 		assertEquals(0, cacheStats.getHitCount());
 		assertEquals(1, cacheStats.getMissCount());
 
 		session.clear();
 		domain = (DomainClass) session.get(DomainClass.class, 2L);
-		assertNotNull(domain.getValue().getContent());
+		assertNotNull(domain.getCurrency().getContent());
 		assertEquals(1, cacheStats.getHitCount());
 	}
 
 	@Test
 	public void shouldInsertParentChildRelationshipInTheCorrectOrder() {
 		Session session = sessionFactory.getCurrentSession();
+		persistCurrency(session, "NOK");
 		DomainClass domain = getDefaultData(3L, "NOK");
 
 		domain.addChild(new Child("1", "Child1"));
@@ -150,7 +173,7 @@ public class HibernateTest {
 	}
 
 	private DomainClass getDefaultData(Long id, String value) {
-		return new DomainClass(id, "Name", new SimpleValueObject(value, "val"));
+		return new DomainClass(id, "Name", new Currency(value, "val"));
 	}
 
 	private DomainClass searchWithCriteria(Session session) {
@@ -168,8 +191,8 @@ public class HibernateTest {
 			@Override
 			public Object doInStatement(Statement stmt) throws SQLException,
 					DataAccessException {
-				ResultSet rs = stmt
-						.executeQuery("SELECT COUNT(*) FROM DOMAIN_TABLE");
+				ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM "
+						+ Tables.DOMAIN_TABLE);
 				rs.next();
 				return rs.getInt(1);
 			}
@@ -179,6 +202,6 @@ public class HibernateTest {
 
 	private void deleteAll(JdbcTemplate template) {
 		SimpleJdbcTestUtils.deleteFromTables(new SimpleJdbcTemplate(template),
-				"DOMAIN_TABLE", "VALUE_TABLE", "CHILD_TABLE");
+				Tables.DOMAIN_TABLE, Tables.CURRENCY_TABLE, Tables.CHILD_TABLE);
 	}
 }

@@ -4,8 +4,10 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import db.Tables;
+
 @Entity
-@Table(name = "CHILD_TABLE")
+@Table(name = Tables.CHILD_TABLE)
 public class Child {
 
 	@Id

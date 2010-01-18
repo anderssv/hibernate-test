@@ -10,7 +10,7 @@ import java.lang.reflect.Method;
 
 import org.junit.Test;
 
-import domain.SimpleValueObject;
+import domain.Currency;
 
 public class PropertyAccessTest {
 
@@ -19,7 +19,7 @@ public class PropertyAccessTest {
 			throws IntrospectionException, IllegalArgumentException,
 			IllegalAccessException, InvocationTargetException {
 
-		SimpleValueObject value = new SimpleValueObject("id", "content");
+		Currency value = new Currency("id", "content");
 		String propertyName = "key";
 
 		BeanInfo info = Introspector.getBeanInfo(value.getClass());

@@ -11,13 +11,15 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import db.Tables;
+
 @Entity
-@Table(name = "DOMAIN_TABLE")
+@Table(name = Tables.DOMAIN_TABLE)
 public class DomainClass {
 
 	private Long id;
 	private String name;
-	private SimpleValueObject value;
+	private Currency currency;
 
 	private Set<Child> children = new HashSet<Child>();
 
@@ -27,10 +29,10 @@ public class DomainClass {
 	}
 
 	public DomainClass(long l, String string,
-			SimpleValueObject simpleValueObject) {
+			Currency currency) {
 		this.id = l;
 		this.name = string;
-		this.value = simpleValueObject;
+		this.currency = currency;
 	}
 
 	@Id
@@ -50,9 +52,9 @@ public class DomainClass {
 		this.name = name;
 	}
 
-	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-	public SimpleValueObject getValue() {
-		return this.value;
+	@ManyToOne(fetch = FetchType.LAZY)
+	public Currency getCurrency() {
+		return this.currency;
 	}
 
 	public void setChildren(Set<Child> children) {
@@ -66,8 +68,8 @@ public class DomainClass {
 
 	// Hibernate
 	@SuppressWarnings("unused")
-	private void setValue(SimpleValueObject values) {
-		this.value = values;
+	private void setCurrency(Currency values) {
+		this.currency = values;
 	}
 
 	public void addChild(Child child) {
