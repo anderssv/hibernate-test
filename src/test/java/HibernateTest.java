@@ -51,9 +51,13 @@ public class HibernateTest {
 		String currencyKey = "NOK";
 		persistCurrency(session, currencyKey);
 		flushAndClearCaches(session);
+		
+		assertNumberOfObjectsInDatabase(1, Tables.CURRENCY_TABLE);
 
 		session.persist(getDefaultData(1L, currencyKey));
 		session.flush();
+		
+		assertNumberOfObjectsInDatabase(1, Tables.CURRENCY_TABLE);
 	}
 
 	private void persistCurrency(Session session, String currencyKey) {
@@ -73,11 +77,10 @@ public class HibernateTest {
 		assertNotNull(object);
 
 		// Bypass the session and delete in the database
-		JdbcTemplate template = new JdbcTemplate(dataSource);
-		assertNumberOfDomainClasses(1, template);
+		assertNumberOfObjectsInDatabase(1, Tables.DOMAIN_TABLE);
 
-		deleteAll(template);
-		assertNumberOfDomainClasses(0, template);
+		deleteAll();
+		assertNumberOfObjectsInDatabase(0, Tables.DOMAIN_TABLE);
 
 		// Do search with ID
 		assertNotNull(session.get(DomainClass.class, 1L));
@@ -167,8 +170,9 @@ public class HibernateTest {
 		});
 	}
 
-	private void assertNumberOfDomainClasses(int i, JdbcTemplate template) {
-		Integer count = countEntries(template);
+	private void assertNumberOfObjectsInDatabase(int i, String table) {
+		JdbcTemplate template = new JdbcTemplate(dataSource);
+		Integer count = countEntriesInDatabase(template, table);
 		assertEquals((Integer) i, count);
 	}
 
@@ -185,14 +189,14 @@ public class HibernateTest {
 		return object;
 	}
 
-	private Integer countEntries(JdbcTemplate template) {
+	private Integer countEntriesInDatabase(JdbcTemplate template, final String tableName) {
 		Integer count = (Integer) template.execute(new StatementCallback() {
 
 			@Override
 			public Object doInStatement(Statement stmt) throws SQLException,
 					DataAccessException {
 				ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM "
-						+ Tables.DOMAIN_TABLE);
+						+ tableName);
 				rs.next();
 				return rs.getInt(1);
 			}
@@ -200,8 +204,8 @@ public class HibernateTest {
 		return count;
 	}
 
-	private void deleteAll(JdbcTemplate template) {
-		SimpleJdbcTestUtils.deleteFromTables(new SimpleJdbcTemplate(template),
+	private void deleteAll() {
+		SimpleJdbcTestUtils.deleteFromTables(new SimpleJdbcTemplate(dataSource),
 				Tables.DOMAIN_TABLE, Tables.CURRENCY_TABLE, Tables.CHILD_TABLE);
 	}
 }
