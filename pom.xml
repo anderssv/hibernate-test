@@ -77,6 +77,11 @@
 			<version>3.2.7.ga</version>
 		</dependency>
 		<dependency>
+			<groupId>javax.transaction</groupId>
+			<artifactId>jta</artifactId>
+			<version>1.1</version>
+		</dependency>
+		<dependency>
 			<artifactId>hibernate-annotations</artifactId>
 			<groupId>org.hibernate</groupId>
 			<version>3.4.0.GA</version>
