@@ -7,14 +7,14 @@ import javax.persistence.Table;
 import db.Tables;
 
 @Entity
-@Table(name = Tables.CHILD_TABLE)
-public class Child {
+@Table(name = Tables.PET_TABLE)
+public abstract class Pet {
 
 	@Id
 	private String id;
 	private String name;
 
-	public Child(String id, String string) {
+	public Pet(String id, String string) {
 		this.id = id;
 		this.name = string;
 	}

@@ -30,8 +30,9 @@ import org.springframework.test.jdbc.SimpleJdbcTestUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import db.Tables;
-import domain.Child;
-import domain.DomainClass;
+import domain.Animal;
+import domain.Pet;
+import domain.Owner;
 import domain.Currency;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -73,17 +74,17 @@ public class HibernateTest {
 		flushAndClearCaches(session);
 
 		// Make sure a normal search works
-		DomainClass object = searchWithCriteria(session);
+		Owner object = searchWithCriteria(session);
 		assertNotNull(object);
 
 		// Bypass the session and delete in the database
-		assertNumberOfObjectsInDatabase(1, Tables.DOMAIN_TABLE);
+		assertNumberOfObjectsInDatabase(1, Tables.OWNER_TABLE);
 
 		deleteAll();
-		assertNumberOfObjectsInDatabase(0, Tables.DOMAIN_TABLE);
+		assertNumberOfObjectsInDatabase(0, Tables.OWNER_TABLE);
 
 		// Do search with ID
-		assertNotNull(session.get(DomainClass.class, 1L));
+		assertNotNull(session.get(Owner.class, 1L));
 		// Do search with Query
 		assertEquals(null, searchWithCriteria(session));
 	}
@@ -107,13 +108,13 @@ public class HibernateTest {
 
 		assertEquals(0, cacheStats.getElementCountInMemory());
 
-		DomainClass domain = (DomainClass) session.get(DomainClass.class, 2L);
+		Owner domain = (Owner) session.get(Owner.class, 2L);
 		assertNotNull(domain.getCurrency().getContent());
 		assertEquals(0, cacheStats.getHitCount());
 		assertEquals(1, cacheStats.getMissCount());
 
 		session.clear();
-		domain = (DomainClass) session.get(DomainClass.class, 2L);
+		domain = (Owner) session.get(Owner.class, 2L);
 		assertNotNull(domain.getCurrency().getContent());
 		assertEquals(1, cacheStats.getHitCount());
 	}
@@ -122,9 +123,9 @@ public class HibernateTest {
 	public void shouldInsertParentChildRelationshipInTheCorrectOrder() {
 		Session session = sessionFactory.getCurrentSession();
 		persistCurrency(session, "NOK");
-		DomainClass domain = getDefaultData(3L, "NOK");
+		Owner domain = getDefaultData(3L, "NOK");
 
-		domain.addChild(new Child("1", "Child1"));
+		domain.addChild(new Animal("1", "Child1"));
 
 		session.persist(domain);
 		flushAndClearCaches(session);
@@ -176,15 +177,15 @@ public class HibernateTest {
 		assertEquals((Integer) i, count);
 	}
 
-	private DomainClass getDefaultData(Long id, String value) {
-		return new DomainClass(id, "Name", new Currency(value, "val"));
+	private Owner getDefaultData(Long id, String value) {
+		return new Owner(id, "Name", new Currency(value, "val"));
 	}
 
-	private DomainClass searchWithCriteria(Session session) {
+	private Owner searchWithCriteria(Session session) {
 		DetachedCriteria searchCriteria = DetachedCriteria
-				.forClass(DomainClass.class);
+				.forClass(Owner.class);
 		searchCriteria.add(Restrictions.eq("id", 1L));
-		DomainClass object = (DomainClass) searchCriteria
+		Owner object = (Owner) searchCriteria
 				.getExecutableCriteria(session).uniqueResult();
 		return object;
 	}
@@ -206,6 +207,6 @@ public class HibernateTest {
 
 	private void deleteAll() {
 		SimpleJdbcTestUtils.deleteFromTables(new SimpleJdbcTemplate(dataSource),
-				Tables.DOMAIN_TABLE, Tables.CURRENCY_TABLE, Tables.CHILD_TABLE);
+				Tables.OWNER_TABLE, Tables.CURRENCY_TABLE, Tables.PET_TABLE);
 	}
 }

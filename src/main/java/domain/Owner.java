@@ -14,21 +14,21 @@ import javax.persistence.Table;
 import db.Tables;
 
 @Entity
-@Table(name = Tables.DOMAIN_TABLE)
-public class DomainClass {
+@Table(name = Tables.OWNER_TABLE)
+public class Owner {
 
 	private Long id;
 	private String name;
 	private Currency currency;
 
-	private Set<Child> children = new HashSet<Child>();
+	private Set<Pet> pets = new HashSet<Pet>();
 
 	// Hibernate
 	@SuppressWarnings("unused")
-	private DomainClass() {
+	private Owner() {
 	}
 
-	public DomainClass(long l, String string,
+	public Owner(long l, String string,
 			Currency currency) {
 		this.id = l;
 		this.name = string;
@@ -57,13 +57,13 @@ public class DomainClass {
 		return this.currency;
 	}
 
-	public void setChildren(Set<Child> children) {
-		this.children = children;
+	public void setPets(Set<Pet> children) {
+		this.pets = children;
 	}
 
 	@OneToMany(cascade = CascadeType.ALL)
-	public Set<Child> getChildren() {
-		return children;
+	public Set<Pet> getPets() {
+		return pets;
 	}
 
 	// Hibernate
@@ -72,8 +72,8 @@ public class DomainClass {
 		this.currency = values;
 	}
 
-	public void addChild(Child child) {
-		children.add(child);
+	public void addChild(Pet child) {
+		pets.add(child);
 	}
 
 }
