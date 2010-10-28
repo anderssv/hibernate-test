@@ -1,7 +1,7 @@
 import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -20,7 +20,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.StatementCallback;
 import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
@@ -31,9 +30,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import db.Tables;
 import domain.Animal;
-import domain.Pet;
-import domain.Owner;
 import domain.Currency;
+import domain.Owner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:context.xml" })
@@ -52,17 +50,13 @@ public class HibernateTest {
 		String currencyKey = "NOK";
 		persistCurrency(session, currencyKey);
 		flushAndClearCaches(session);
-		
+
 		assertNumberOfObjectsInDatabase(1, Tables.CURRENCY_TABLE);
 
 		session.persist(getDefaultData(1L, currencyKey));
 		session.flush();
-		
-		assertNumberOfObjectsInDatabase(1, Tables.CURRENCY_TABLE);
-	}
 
-	private void persistCurrency(Session session, String currencyKey) {
-		session.persist(new Currency(currencyKey, "Description"));
+		assertNumberOfObjectsInDatabase(1, Tables.CURRENCY_TABLE);
 	}
 
 	@Test
@@ -86,13 +80,7 @@ public class HibernateTest {
 		// Do search with ID
 		assertNotNull(session.get(Owner.class, 1L));
 		// Do search with Query
-		assertEquals(null, searchWithCriteria(session));
-	}
-
-	private void persistDefaultData(Session session, long domainId,
-			String currencyKey) {
-		persistCurrency(session, currencyKey);
-		session.persist(getDefaultData(domainId, currencyKey));
+		assertNull(searchWithCriteria(session));
 	}
 
 	@Test
@@ -102,18 +90,21 @@ public class HibernateTest {
 
 		flushAndClearCaches(session);
 
-		SecondLevelCacheStatistics cacheStats = sessionFactory.getStatistics()
-				.getSecondLevelCacheStatistics(
-						Currency.class.getCanonicalName());
-
+		SecondLevelCacheStatistics cacheStats = sessionFactory.getStatistics().getSecondLevelCacheStatistics(
+				Currency.class.getCanonicalName());
 		assertEquals(0, cacheStats.getElementCountInMemory());
 
 		Owner domain = (Owner) session.get(Owner.class, 2L);
+
 		assertNotNull(domain.getCurrency().getContent());
 		assertEquals(0, cacheStats.getHitCount());
 		assertEquals(1, cacheStats.getMissCount());
+		assertEquals(1, cacheStats.getElementCountInMemory());
 
+		// Clear out session (1st level cache) to make sure it is fetched from
+		// second level
 		session.clear();
+
 		domain = (Owner) session.get(Owner.class, 2L);
 		assertNotNull(domain.getCurrency().getContent());
 		assertEquals(1, cacheStats.getHitCount());
@@ -131,6 +122,15 @@ public class HibernateTest {
 		flushAndClearCaches(session);
 	}
 
+	private void persistCurrency(Session session, String currencyKey) {
+		session.persist(new Currency(currencyKey, "Description"));
+	}
+
+	private void persistDefaultData(Session session, long domainId, String currencyKey) {
+		persistCurrency(session, currencyKey);
+		session.persist(getDefaultData(domainId, currencyKey));
+	}
+
 	private void flushAndClearCaches(Session session) {
 		session.flush();
 		evictSecondLevelCache();
@@ -139,36 +139,17 @@ public class HibernateTest {
 
 	@SuppressWarnings("unchecked")
 	private void evictSecondLevelCache() {
-		Map<String, CollectionMetadata> roleMap = sessionFactory
-				.getAllCollectionMetadata();
+		Map<String, CollectionMetadata> roleMap = sessionFactory.getAllCollectionMetadata();
 		for (String roleName : roleMap.keySet()) {
 			sessionFactory.evictCollection(roleName);
 		}
 
-		Map<String, ClassMetadata> entityMap = sessionFactory
-				.getAllClassMetadata();
+		Map<String, ClassMetadata> entityMap = sessionFactory.getAllClassMetadata();
 		for (String entityName : entityMap.keySet()) {
 			sessionFactory.evictEntity(entityName);
 		}
 
 		sessionFactory.evictQueries();
-	}
-
-	private void printTableNames(JdbcTemplate template) {
-		template.execute(new ConnectionCallback() {
-
-			@Override
-			public Object doInConnection(Connection con) throws SQLException,
-					DataAccessException {
-				ResultSet rs = con.getMetaData().getTables(null, null, null,
-						new String[] { "TABLE" });
-				while (rs.next()) {
-					System.out.println(rs.getString("TABLE_NAME"));
-				}
-
-				return null;
-			}
-		});
 	}
 
 	private void assertNumberOfObjectsInDatabase(int i, String table) {
@@ -182,11 +163,9 @@ public class HibernateTest {
 	}
 
 	private Owner searchWithCriteria(Session session) {
-		DetachedCriteria searchCriteria = DetachedCriteria
-				.forClass(Owner.class);
+		DetachedCriteria searchCriteria = DetachedCriteria.forClass(Owner.class);
 		searchCriteria.add(Restrictions.eq("id", 1L));
-		Owner object = (Owner) searchCriteria
-				.getExecutableCriteria(session).uniqueResult();
+		Owner object = (Owner) searchCriteria.getExecutableCriteria(session).uniqueResult();
 		return object;
 	}
 
@@ -194,10 +173,8 @@ public class HibernateTest {
 		Integer count = (Integer) template.execute(new StatementCallback() {
 
 			@Override
-			public Object doInStatement(Statement stmt) throws SQLException,
-					DataAccessException {
-				ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM "
-						+ tableName);
+			public Object doInStatement(Statement stmt) throws SQLException, DataAccessException {
+				ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + tableName);
 				rs.next();
 				return rs.getInt(1);
 			}
@@ -206,7 +183,7 @@ public class HibernateTest {
 	}
 
 	private void deleteAll() {
-		SimpleJdbcTestUtils.deleteFromTables(new SimpleJdbcTemplate(dataSource),
-				Tables.OWNER_TABLE, Tables.CURRENCY_TABLE, Tables.PET_TABLE);
+		SimpleJdbcTestUtils.deleteFromTables(new SimpleJdbcTemplate(dataSource), Tables.OWNER_TABLE,
+				Tables.CURRENCY_TABLE, Tables.PET_TABLE);
 	}
 }

@@ -15,8 +15,7 @@ import domain.Currency;
 public class PropertyAccessTest {
 
 	@Test
-	public void shouldAccessPropertyWhenProtected()
-			throws IntrospectionException, IllegalArgumentException,
+	public void shouldAccessPropertyWhenProtected() throws IntrospectionException, IllegalArgumentException,
 			IllegalAccessException, InvocationTargetException {
 
 		Currency value = new Currency("id", "content");
@@ -36,9 +35,7 @@ public class PropertyAccessTest {
 		Method[] methods = value.getClass().getDeclaredMethods();
 		Method writeMethod = null;
 		for (Method method : methods) {
-			if (method.getName().equals(
-					"set" + propertyName.substring(0, 1).toUpperCase()
-							+ propertyName.substring(1))) {
+			if (method.getName().equals("set" + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1))) {
 				method.setAccessible(true);
 				writeMethod = method;
 			}
